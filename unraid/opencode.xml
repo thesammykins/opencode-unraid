@@ -1,0 +1,175 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>opencode</Name>
+  <Repository>ghcr.io/OWNER/opencode-unraid:latest</Repository>
+  <Registry>https://github.com/OWNER/opencode-unraid/pkgs/container/opencode-unraid</Registry>
+  <Network>bridge</Network>
+  <Privileged>false</Privileged>
+  <Shell>bash</Shell>
+  
+  <Support>https://github.com/OWNER/opencode-unraid/issues</Support>
+  <Project>https://github.com/anomalyco/opencode</Project>
+  <Overview>
+OpenCode is an open-source AI coding agent that provides a web-based interface for AI-assisted development.
+
+This container runs OpenCode in web mode, allowing you to access the AI coding agent from any browser on your network. It includes development tools like Node.js, Python, npm, and git for complete coding workflows.
+
+Key Features:
+- Web-based terminal UI accessible from any device
+- Multi-provider support (Anthropic, OpenAI, Google, Azure, local models)
+- Built-in development environment with Node.js, Python, git
+- Persistent configuration and session history
+- Project file access for AI-assisted coding
+
+After installation, open the WebUI and use /connect to configure your LLM provider API key.
+  </Overview>
+  <Category>Productivity: Tools:</Category>
+  <WebUI>http://[IP]:[PORT:4096]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/OWNER/opencode-unraid/main/unraid/opencode.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/anomalyco/opencode/dev/packages/console/app/src/asset/logo-ornate-light.svg</Icon>
+  
+  <ExtraParams>--restart unless-stopped</ExtraParams>
+
+  <Config 
+    Name="WebUI Port" 
+    Target="4096" 
+    Default="4096" 
+    Mode="tcp" 
+    Description="OpenCode web interface port" 
+    Type="Port" 
+    Display="always" 
+    Required="true" 
+    Mask="false"/>
+
+  <Config 
+    Name="Config" 
+    Target="/home/opencode/.config/opencode" 
+    Default="/mnt/user/appdata/opencode/config" 
+    Mode="rw" 
+    Description="OpenCode configuration files (opencode.json, auth.json, agents, commands)" 
+    Type="Path" 
+    Display="always" 
+    Required="true" 
+    Mask="false"/>
+
+  <Config 
+    Name="Data" 
+    Target="/home/opencode/.local/share/opencode" 
+    Default="/mnt/user/appdata/opencode/data" 
+    Mode="rw" 
+    Description="OpenCode data files (session history, logs)" 
+    Type="Path" 
+    Display="always" 
+    Required="true" 
+    Mask="false"/>
+
+  <Config 
+    Name="State" 
+    Target="/home/opencode/.local/state/opencode" 
+    Default="/mnt/user/appdata/opencode/state" 
+    Mode="rw" 
+    Description="OpenCode state files" 
+    Type="Path" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Cache" 
+    Target="/home/opencode/.cache/opencode" 
+    Default="/mnt/user/appdata/opencode/cache" 
+    Mode="rw" 
+    Description="OpenCode cache files (can be cleared safely)" 
+    Type="Path" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Projects" 
+    Target="/projects" 
+    Default="/mnt/user/projects" 
+    Mode="rw" 
+    Description="Directory containing your project files for AI-assisted coding" 
+    Type="Path" 
+    Display="always" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="PUID" 
+    Target="PUID" 
+    Default="99" 
+    Mode="" 
+    Description="User ID for file permissions" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="PGID" 
+    Target="PGID" 
+    Default="100" 
+    Mode="" 
+    Description="Group ID for file permissions" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Timezone" 
+    Target="TZ" 
+    Default="Etc/UTC" 
+    Mode="" 
+    Description="Container timezone (e.g., America/New_York, Europe/London)" 
+    Type="Variable" 
+    Display="always" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Port" 
+    Target="PORT" 
+    Default="4096" 
+    Mode="" 
+    Description="Internal port for OpenCode web server (should match WebUI Port)" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Anthropic API Key" 
+    Target="ANTHROPIC_API_KEY" 
+    Default="" 
+    Mode="" 
+    Description="API key for Anthropic/Claude (optional - can also configure via /connect command)" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="true"/>
+
+  <Config 
+    Name="OpenAI API Key" 
+    Target="OPENAI_API_KEY" 
+    Default="" 
+    Mode="" 
+    Description="API key for OpenAI (optional - can also configure via /connect command)" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="true"/>
+
+  <Config 
+    Name="Disable Auto-Update" 
+    Target="OPENCODE_DISABLE_AUTOUPDATE" 
+    Default="false|true" 
+    Mode="" 
+    Description="Disable automatic OpenCode updates" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+</Container>

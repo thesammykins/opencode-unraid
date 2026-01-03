@@ -1,0 +1,205 @@
+# OpenCode for Unraid
+
+Docker container running [OpenCode](https://github.com/anomalyco/opencode) with web interface support, designed for Unraid servers.
+
+OpenCode is an open-source AI coding agent that helps you write, debug, and refactor code using LLMs like Claude, GPT-4, and Gemini.
+
+## Features
+
+- **Web-based UI** - Access OpenCode from any browser on your network
+- **Development ready** - Includes Node.js, Python, npm, git, and build tools
+- **Persistent configuration** - Config and sessions stored in Unraid appdata
+- **Multi-provider support** - Works with Anthropic, OpenAI, Google, Azure, Groq, and local models
+
+## Quick Start
+
+### Unraid Community Applications
+
+1. Search for "OpenCode" in Community Applications
+2. Click Install
+3. Configure the paths and port
+4. Start the container
+5. Open the WebUI and run `/connect` to configure your LLM provider
+
+### Docker Compose
+
+```yaml
+version: "3.8"
+
+services:
+  opencode:
+    image: ghcr.io/OWNER/opencode-unraid:latest
+    container_name: opencode
+    ports:
+      - "4096:4096"
+    volumes:
+      - ./appdata/config:/home/opencode/.config/opencode
+      - ./appdata/data:/home/opencode/.local/share/opencode
+      - ./appdata/state:/home/opencode/.local/state/opencode
+      - ./appdata/cache:/home/opencode/.cache/opencode
+      - /path/to/projects:/projects
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    restart: unless-stopped
+```
+
+### Docker CLI
+
+```bash
+docker run -d \
+  --name opencode \
+  -p 4096:4096 \
+  -v /mnt/user/appdata/opencode/config:/home/opencode/.config/opencode \
+  -v /mnt/user/appdata/opencode/data:/home/opencode/.local/share/opencode \
+  -v /mnt/user/appdata/opencode/state:/home/opencode/.local/state/opencode \
+  -v /mnt/user/appdata/opencode/cache:/home/opencode/.cache/opencode \
+  -v /mnt/user/projects:/projects \
+  -e PUID=99 \
+  -e PGID=100 \
+  -e TZ=Etc/UTC \
+  ghcr.io/OWNER/opencode-unraid:latest
+```
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PUID` | 99 | User ID for file permissions |
+| `PGID` | 100 | Group ID for file permissions |
+| `TZ` | `Etc/UTC` | Container timezone |
+| `PORT` | 4096 | Web server port |
+| `ANTHROPIC_API_KEY` | - | Anthropic API key (optional) |
+| `OPENAI_API_KEY` | - | OpenAI API key (optional) |
+| `OPENCODE_DISABLE_AUTOUPDATE` | - | Set to `true` to disable auto-updates |
+
+### Volume Mappings
+
+| Container Path | Purpose |
+|---------------|---------|
+| `/home/opencode/.config/opencode` | Configuration files |
+| `/home/opencode/.local/share/opencode` | Session data and logs |
+| `/home/opencode/.local/state/opencode` | State files |
+| `/home/opencode/.cache/opencode` | Cache (safe to clear) |
+| `/projects` | Your project files |
+
+## Setting Up LLM Providers
+
+After starting the container, open the web UI and configure your LLM provider:
+
+### Option 1: Interactive Setup (Recommended)
+
+1. Open the WebUI at `http://your-server:4096`
+2. Type `/connect` and press Enter
+3. Select your provider and follow the prompts
+4. Enter your API key when prompted
+
+### Option 2: Environment Variables
+
+Set API keys via environment variables:
+- `ANTHROPIC_API_KEY` for Claude models
+- `OPENAI_API_KEY` for GPT models
+- `GOOGLE_API_KEY` for Gemini models
+
+### Option 3: Configuration File
+
+Create `opencode.json` in the config volume:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-5"
+}
+```
+
+## Included Development Tools
+
+The container includes these tools for AI-assisted development:
+
+- **Node.js 22** - JavaScript/TypeScript runtime
+- **npm** - Node package manager
+- **Python 3.11** - Python interpreter
+- **pip** - Python package manager
+- **git** - Version control
+- **build-essential** - C/C++ compiler and tools
+- **ripgrep (rg)** - Fast text search
+- **fd** - Fast file finder
+- **jq** - JSON processor
+- **curl/wget** - HTTP clients
+
+## Usage Tips
+
+### Working with Projects
+
+Mount your project directories to `/projects`:
+
+```yaml
+volumes:
+  - /mnt/user/development:/projects
+```
+
+Then in OpenCode, navigate to your project:
+```
+cd /projects/my-app
+```
+
+### Custom Agents
+
+Create custom agents by adding markdown files to your config:
+```
+/mnt/user/appdata/opencode/config/agent/my-agent.md
+```
+
+### Custom Commands
+
+Create custom commands:
+```
+/mnt/user/appdata/opencode/config/command/my-command.md
+```
+
+## Troubleshooting
+
+### Container won't start
+
+Check the logs:
+```bash
+docker logs opencode
+```
+
+### Permission issues
+
+Ensure PUID/PGID match your Unraid user (default: 99/100 for nobody/users).
+
+### Can't connect to LLM
+
+1. Verify your API key is correct
+2. Check network connectivity
+3. Try `/connect` again to reconfigure
+
+### Web UI not accessible
+
+1. Check the container is running: `docker ps`
+2. Verify port 4096 is not in use
+3. Check Unraid firewall settings
+
+## Building Locally
+
+```bash
+git clone https://github.com/OWNER/opencode-unraid.git
+cd opencode-unraid
+docker build -t opencode-unraid .
+docker-compose up -d
+```
+
+## License
+
+This project is licensed under the MIT License. OpenCode itself is also MIT licensed.
+
+## Links
+
+- [OpenCode Documentation](https://opencode.ai/docs)
+- [OpenCode GitHub](https://github.com/anomalyco/opencode)
+- [Unraid Forums](https://forums.unraid.net/)

@@ -1,0 +1,11 @@
+.git
+.gitignore
+*.md
+!README.md
+appdata/
+projects/
+docker-compose*.yml
+.env*
+.DS_Store
+Thumbs.db
+unraid/

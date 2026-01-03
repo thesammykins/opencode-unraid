@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  opencode:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: opencode
+    hostname: opencode
+    ports:
+      - "4096:4096"
+    volumes:
+      - ./appdata/config:/home/opencode/.config/opencode
+      - ./appdata/data:/home/opencode/.local/share/opencode
+      - ./appdata/state:/home/opencode/.local/state/opencode
+      - ./appdata/cache:/home/opencode/.cache/opencode
+      - ./projects:/projects
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - PORT=4096
+    restart: unless-stopped
