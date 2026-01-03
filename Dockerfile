@@ -51,8 +51,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create opencode user
-RUN groupadd -g ${PGID} opencode && \
-    useradd -u ${PUID} -g opencode -m -d /home/opencode -s /bin/bash opencode
+RUN useradd -u ${PUID} -g users -m -d /home/opencode -s /bin/bash opencode
 
 # Create directory structure
 RUN mkdir -p \
@@ -61,7 +60,7 @@ RUN mkdir -p \
     /home/opencode/.local/state/opencode \
     /home/opencode/.cache/opencode \
     /projects && \
-    chown -R opencode:opencode /home/opencode /projects
+    chown -R opencode:users /home/opencode /projects
 
 # Install opencode-ai globally
 RUN npm install -g opencode-ai@latest && \
