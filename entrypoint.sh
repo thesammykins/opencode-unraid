@@ -4,14 +4,34 @@ set -e
 PUID=${PUID:-99}
 PGID=${PGID:-100}
 PORT=${PORT:-4096}
+WEB_PORT=${WEB_PORT:-4097}
+ENABLE_WEB_UI=${ENABLE_WEB_UI:-false}
+OPENCODE_CLI=${OPENCODE_CLI:-shuvcode}
 EXTRA_APT_PACKAGES="${EXTRA_APT_PACKAGES:-}"
 EXTRA_NPM_PACKAGES="${EXTRA_NPM_PACKAGES:-}"
 EXTRA_PIP_PACKAGES="${EXTRA_PIP_PACKAGES:-}"
 UPDATE_CHECK_INTERVAL="${UPDATE_CHECK_INTERVAL:-3600}"
 OPENCODE_PID_FILE="/tmp/opencode.pid"
+WEB_PID_FILE="/tmp/opencode-web.pid"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [entrypoint] $1"
+}
+
+validate_cli() {
+    case "$OPENCODE_CLI" in
+        opencode|shuvcode)
+            if ! command -v "$OPENCODE_CLI" &> /dev/null; then
+                log "ERROR: $OPENCODE_CLI not found in PATH"
+                exit 1
+            fi
+            log "Using CLI: $OPENCODE_CLI"
+            ;;
+        *)
+            log "ERROR: Invalid OPENCODE_CLI value: $OPENCODE_CLI (must be 'opencode' or 'shuvcode')"
+            exit 1
+            ;;
+    esac
 }
 
 install_extra_packages() {
@@ -66,23 +86,42 @@ start_update_checker() {
     fi
 }
 
-run_opencode() {
-    log "Starting Shuvcode on port ${PORT}"
+start_web_ui() {
+    if [ "${ENABLE_WEB_UI}" != "true" ]; then
+        return
+    fi
+
+    if [ "${PORT}" = "${WEB_PORT}" ]; then
+        log "ERROR: PORT and WEB_PORT cannot be the same (both set to ${PORT})"
+        exit 1
+    fi
+
+    log "Starting Web UI on port ${WEB_PORT}"
+    "$OPENCODE_CLI" web --hostname 0.0.0.0 --port "${WEB_PORT}" &
+    echo $! > "$WEB_PID_FILE"
+    log "Web UI started (PID: $(cat $WEB_PID_FILE))"
+}
+
+run_serve() {
+    log "Starting ${OPENCODE_CLI} headless server on port ${PORT}"
     echo $$ > "$OPENCODE_PID_FILE"
-    exec "$@" --hostname 0.0.0.0 --port "${PORT}"
+    exec "$OPENCODE_CLI" serve --hostname 0.0.0.0 --port "${PORT}"
 }
 
 main() {
+    validate_cli
+
     if [ "$(id -u)" = '0' ]; then
         install_extra_packages
         setup_user_permissions
         start_update_checker
-        
+
         log "Dropping privileges to user opencode (${PUID}:${PGID})"
         exec gosu opencode "$0" "$@"
     fi
 
-    run_opencode "$@"
+    start_web_ui
+    run_serve
 }
 
 main "$@"

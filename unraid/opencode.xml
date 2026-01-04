@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Container version="2">
-  <Name>shuvcode</Name>
+  <Name>opencode</Name>
   <Repository>ghcr.io/thesammykins/opencode-unraid:latest</Repository>
   <Registry>https://github.com/thesammykins/opencode-unraid/pkgs/container/opencode-unraid</Registry>
   <Network>bridge</Network>
@@ -8,51 +8,60 @@
   <Shell>bash</Shell>
   
   <Support>https://github.com/thesammykins/opencode-unraid/issues</Support>
-  <Project>https://github.com/Latitudes-Dev/shuvcode</Project>
+  <Project>https://github.com/sst/opencode</Project>
   <Overview>
-Shuvcode is an enhanced fork of OpenCode - an open-source AI coding agent that provides a web-based interface for AI-assisted development.
+OpenCode/Shuvcode is an open-source AI coding agent that provides a headless API server for AI-assisted development.
 
-This container runs Shuvcode in web mode, allowing you to access the AI coding agent from any browser on your network. It includes development tools like Node.js, Python, npm, and git for complete coding workflows.
+This container runs in headless serve mode by default, allowing other OpenCode clients (desktop app, CLI, or web) to connect to it. Optionally enable a built-in web UI on a separate port.
 
 Key Features:
-- Web-based terminal UI accessible from any device
-- Mobile PWA support with responsive design
+- Headless API server for remote OpenCode clients
+- Optional web UI on separate port (enable with ENABLE_WEB_UI=true)
+- Switch between mainline OpenCode or Shuvcode fork
 - Multi-provider support (Anthropic, OpenAI, Google, Azure, local models)
 - Built-in development environment with Node.js, Python, git
 - Persistent configuration and session history
-- Project file access for AI-assisted coding
 - Auto-update with session-aware restart
-- Install custom packages at runtime via environment variables
-- Custom server URL settings for self-hosted deployments
-- Enhanced features from upstream PRs
+- Install custom packages at runtime
 
-After installation, open the WebUI and use /connect to configure your LLM provider API key.
+After installation, connect using the OpenCode desktop app or enable the web UI.
   </Overview>
   <Category>Productivity: Tools:</Category>
-  <WebUI>http://[IP]:[PORT:4096]</WebUI>
+  <WebUI>http://[IP]:[PORT:4097]</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/thesammykins/opencode-unraid/main/unraid/opencode.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/Latitudes-Dev/shuvcode/integration/packages/console/app/src/asset/logo-ornate-light.svg</Icon>
-  <Date>2026-01-04</Date>
+  <Icon>https://raw.githubusercontent.com/sst/opencode/main/www/public/favicon.svg</Icon>
+  <Date>2026-01-05</Date>
   
   <ExtraParams>--restart unless-stopped</ExtraParams>
 
   <Config 
-    Name="WebUI Port" 
+    Name="API Server Port" 
     Target="4096" 
     Default="4096" 
     Mode="tcp" 
-    Description="Shuvcode web interface port" 
+    Description="Headless API server port for OpenCode clients" 
     Type="Port" 
     Display="always" 
     Required="true" 
     Mask="false"/>
 
   <Config 
+    Name="Web UI Port" 
+    Target="4097" 
+    Default="4097" 
+    Mode="tcp" 
+    Description="Optional web UI port (only used if ENABLE_WEB_UI=true)" 
+    Type="Port" 
+    Display="always" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
     Name="Config" 
     Target="/home/opencode/.config/opencode" 
-    Default="/mnt/user/appdata/shuvcode/config" 
+    Default="/mnt/user/appdata/opencode/config" 
     Mode="rw" 
-    Description="Shuvcode configuration files (opencode.json, auth.json, agents, commands)" 
+    Description="Configuration files (opencode.json, auth.json, agents, commands)" 
     Type="Path" 
     Display="always" 
     Required="true" 
@@ -61,9 +70,9 @@ After installation, open the WebUI and use /connect to configure your LLM provid
   <Config 
     Name="Data" 
     Target="/home/opencode/.local/share/opencode" 
-    Default="/mnt/user/appdata/shuvcode/data" 
+    Default="/mnt/user/appdata/opencode/data" 
     Mode="rw" 
-    Description="Shuvcode data files (session history, logs)" 
+    Description="Data files (session history, logs)" 
     Type="Path" 
     Display="always" 
     Required="true" 
@@ -72,9 +81,9 @@ After installation, open the WebUI and use /connect to configure your LLM provid
   <Config 
     Name="State" 
     Target="/home/opencode/.local/state/opencode" 
-    Default="/mnt/user/appdata/shuvcode/state" 
+    Default="/mnt/user/appdata/opencode/state" 
     Mode="rw" 
-    Description="Shuvcode state files" 
+    Description="State files" 
     Type="Path" 
     Display="advanced" 
     Required="false" 
@@ -83,9 +92,9 @@ After installation, open the WebUI and use /connect to configure your LLM provid
   <Config 
     Name="Cache" 
     Target="/home/opencode/.cache/opencode" 
-    Default="/mnt/user/appdata/shuvcode/cache" 
+    Default="/mnt/user/appdata/opencode/cache" 
     Mode="rw" 
-    Description="Shuvcode cache files (can be cleared safely)" 
+    Description="Cache files (can be cleared safely)" 
     Type="Path" 
     Display="advanced" 
     Required="false" 
@@ -94,7 +103,7 @@ After installation, open the WebUI and use /connect to configure your LLM provid
   <Config 
     Name="SSH Keys" 
     Target="/home/opencode/.ssh" 
-    Default="/mnt/user/appdata/shuvcode/ssh" 
+    Default="/mnt/user/appdata/opencode/ssh" 
     Mode="rw" 
     Description="SSH keys for git operations (optional)" 
     Type="Path" 
@@ -147,13 +156,46 @@ After installation, open the WebUI and use /connect to configure your LLM provid
     Mask="false"/>
 
   <Config 
-    Name="Port" 
+    Name="API Server Port (Internal)" 
     Target="PORT" 
     Default="4096" 
     Mode="" 
-    Description="Internal port for Shuvcode web server (should match WebUI Port)" 
+    Description="Internal port for headless API server (should match API Server Port)" 
     Type="Variable" 
     Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Web UI Port (Internal)" 
+    Target="WEB_PORT" 
+    Default="4097" 
+    Mode="" 
+    Description="Internal port for web UI (should match Web UI Port)" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Enable Web UI" 
+    Target="ENABLE_WEB_UI" 
+    Default="false|true" 
+    Mode="" 
+    Description="Enable the built-in web UI on WEB_PORT (in addition to headless API server)" 
+    Type="Variable" 
+    Display="always" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="CLI Package" 
+    Target="OPENCODE_CLI" 
+    Default="shuvcode|opencode" 
+    Mode="" 
+    Description="Which CLI to use: 'opencode' (mainline) or 'shuvcode' (enhanced fork)" 
+    Type="Variable" 
+    Display="always" 
     Required="false" 
     Mask="false"/>
 
@@ -195,7 +237,7 @@ After installation, open the WebUI and use /connect to configure your LLM provid
     Target="UPDATE_CHECK_INTERVAL" 
     Default="3600" 
     Mode="" 
-    Description="How often to check for Shuvcode updates in seconds (3600 = 1 hour)" 
+    Description="How often to check for updates in seconds (3600 = 1 hour)" 
     Type="Variable" 
     Display="advanced" 
     Required="false" 
@@ -239,7 +281,18 @@ After installation, open the WebUI and use /connect to configure your LLM provid
     Target="OPENCODE_DISABLE_AUTOUPDATE" 
     Default="false|true" 
     Mode="" 
-    Description="Disable automatic Shuvcode updates (updates only apply when no active sessions)" 
+    Description="Disable automatic updates (updates only apply when no active sessions)" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Desktop UI URL" 
+    Target="SHUVCODE_DESKTOP_URL" 
+    Default="https://app.opencode.ai" 
+    Mode="" 
+    Description="URL for the desktop web UI proxy (only used when web UI is enabled)" 
     Type="Variable" 
     Display="advanced" 
     Required="false" 

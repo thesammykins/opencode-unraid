@@ -1,14 +1,15 @@
 version: "3.8"
 
 services:
-  shuvcode:
+  opencode:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: shuvcode
-    hostname: shuvcode
+    container_name: opencode
+    hostname: opencode
     ports:
       - "4096:4096"
+      - "4097:4097"
     volumes:
       - ./appdata/config:/home/opencode/.config/opencode
       - ./appdata/data:/home/opencode/.local/share/opencode
@@ -21,5 +22,9 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
       - PORT=4096
+      - WEB_PORT=4097
+      - ENABLE_WEB_UI=false
+      - OPENCODE_CLI=shuvcode
       - UPDATE_CHECK_INTERVAL=3600
+      - SHUVCODE_DESKTOP_URL=https://app.opencode.ai
     restart: unless-stopped
