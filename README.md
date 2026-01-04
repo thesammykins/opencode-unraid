@@ -10,6 +10,9 @@ OpenCode is an open-source AI coding agent that helps you write, debug, and refa
 - **Development ready** - Includes Node.js, Python, npm, git, and build tools
 - **Persistent configuration** - Config and sessions stored in Unraid appdata
 - **Multi-provider support** - Works with Anthropic, OpenAI, Google, Azure, Groq, and local models
+- **Auto-updates** - Automatically updates OpenCode when no sessions are active
+- **Custom packages** - Install additional apt, npm, or pip packages at runtime
+- **SSH support** - Mount SSH keys for git operations
 
 ## Quick Start
 
@@ -21,6 +24,19 @@ OpenCode is an open-source AI coding agent that helps you write, debug, and refa
 4. Start the container
 5. Open the WebUI and run `/connect` to configure your LLM provider
 
+### Manual Template Installation (Before CA Approval)
+
+If this template isn't yet in Community Applications, add it manually:
+
+1. Go to **Settings** → **Docker** → **Template Repositories**
+2. Add this URL:
+   ```
+   https://raw.githubusercontent.com/thesammykins/opencode-unraid/main/unraid/opencode.xml
+   ```
+3. Save and go to **Docker** → **Add Container**
+4. Select **Template: opencode** from the dropdown
+5. Configure paths and click Apply
+
 ### Docker Compose
 
 ```yaml
@@ -28,7 +44,7 @@ version: "3.8"
 
 services:
   opencode:
-    image: ghcr.io/OWNER/opencode-unraid:latest
+    image: ghcr.io/thesammykins/opencode-unraid:latest
     container_name: opencode
     ports:
       - "4096:4096"
@@ -37,6 +53,7 @@ services:
       - ./appdata/data:/home/opencode/.local/share/opencode
       - ./appdata/state:/home/opencode/.local/state/opencode
       - ./appdata/cache:/home/opencode/.cache/opencode
+      - ./appdata/ssh:/home/opencode/.ssh
       - /path/to/projects:/projects
     environment:
       - PUID=1000
@@ -55,11 +72,12 @@ docker run -d \
   -v /mnt/user/appdata/opencode/data:/home/opencode/.local/share/opencode \
   -v /mnt/user/appdata/opencode/state:/home/opencode/.local/state/opencode \
   -v /mnt/user/appdata/opencode/cache:/home/opencode/.cache/opencode \
+  -v /mnt/user/appdata/opencode/ssh:/home/opencode/.ssh \
   -v /mnt/user/projects:/projects \
   -e PUID=99 \
   -e PGID=100 \
   -e TZ=Etc/UTC \
-  ghcr.io/OWNER/opencode-unraid:latest
+  ghcr.io/thesammykins/opencode-unraid:latest
 ```
 
 ## Configuration
@@ -72,9 +90,14 @@ docker run -d \
 | `PGID` | 100 | Group ID for file permissions |
 | `TZ` | `Etc/UTC` | Container timezone |
 | `PORT` | 4096 | Web server port |
+| `EXTRA_APT_PACKAGES` | - | Space-separated apt packages to install |
+| `EXTRA_NPM_PACKAGES` | - | Space-separated npm packages to install globally |
+| `EXTRA_PIP_PACKAGES` | - | Space-separated pip packages to install |
+| `UPDATE_CHECK_INTERVAL` | 3600 | Seconds between update checks |
+| `OPENCODE_DISABLE_AUTOUPDATE` | - | Set to `true` to disable auto-updates |
 | `ANTHROPIC_API_KEY` | - | Anthropic API key (optional) |
 | `OPENAI_API_KEY` | - | OpenAI API key (optional) |
-| `OPENCODE_DISABLE_AUTOUPDATE` | - | Set to `true` to disable auto-updates |
+| `GOOGLE_API_KEY` | - | Google Gemini API key (optional) |
 
 ### Volume Mappings
 
@@ -84,7 +107,40 @@ docker run -d \
 | `/home/opencode/.local/share/opencode` | Session data and logs |
 | `/home/opencode/.local/state/opencode` | State files |
 | `/home/opencode/.cache/opencode` | Cache (safe to clear) |
+| `/home/opencode/.ssh` | SSH keys for git |
 | `/projects` | Your project files |
+
+## Installing Custom Packages
+
+You can install additional packages at container startup using environment variables:
+
+```yaml
+environment:
+  # Install system packages
+  - EXTRA_APT_PACKAGES=golang ruby lua5.4 sqlite3
+  
+  # Install Node.js packages globally
+  - EXTRA_NPM_PACKAGES=typescript tsx pnpm yarn
+  
+  # Install Python packages
+  - EXTRA_PIP_PACKAGES=black ruff mypy pytest
+```
+
+Packages are installed on every container start to ensure freshness. For frequently used packages, consider building a custom image.
+
+## Auto-Updates
+
+The container automatically checks for OpenCode updates (default: every hour). When an update is available:
+
+1. Checks if any sessions are currently active via `/session/status` API
+2. If sessions are active, postpones the update
+3. If no sessions, installs the update and restarts the service
+
+To disable auto-updates:
+```yaml
+environment:
+  - OPENCODE_DISABLE_AUTOUPDATE=true
+```
 
 ## Setting Up LLM Providers
 
@@ -123,12 +179,31 @@ The container includes these tools for AI-assisted development:
 - **npm** - Node package manager
 - **Python 3.11** - Python interpreter
 - **pip** - Python package manager
-- **git** - Version control
+- **git** - Version control (with LFS support)
 - **build-essential** - C/C++ compiler and tools
 - **ripgrep (rg)** - Fast text search
 - **fd** - Fast file finder
 - **jq** - JSON processor
 - **curl/wget** - HTTP clients
+- **ssh** - SSH client for git operations
+- **htop** - Process viewer
+
+## SSH Keys for Git
+
+Mount your SSH keys to enable git operations with private repositories:
+
+```yaml
+volumes:
+  - ~/.ssh:/home/opencode/.ssh:ro
+```
+
+Or copy specific keys:
+```yaml
+volumes:
+  - /mnt/user/appdata/opencode/ssh:/home/opencode/.ssh
+```
+
+Ensure proper permissions (600 for private keys).
 
 ## Usage Tips
 
@@ -160,6 +235,21 @@ Create custom commands:
 /mnt/user/appdata/opencode/config/command/my-command.md
 ```
 
+### MCP Servers
+
+Configure MCP servers in your `opencode.json`:
+```json
+{
+  "mcp": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/projects"]
+    }
+  }
+}
+```
+
 ## Troubleshooting
 
 ### Container won't start
@@ -185,14 +275,35 @@ Ensure PUID/PGID match your Unraid user (default: 99/100 for nobody/users).
 2. Verify port 4096 is not in use
 3. Check Unraid firewall settings
 
+### Package installation fails
+
+Check container logs for specific errors. Ensure package names are correct for the respective package manager.
+
 ## Building Locally
 
 ```bash
-git clone https://github.com/OWNER/opencode-unraid.git
+git clone https://github.com/thesammykins/opencode-unraid.git
 cd opencode-unraid
 docker build -t opencode-unraid .
 docker-compose up -d
 ```
+
+## Image Versioning
+
+This image uses weekly automated builds to stay current:
+
+| Tag | Description |
+|-----|-------------|
+| `latest` | Most recent build from main branch |
+| `weekly-YYYYMMDD` | Weekly builds with date stamp |
+| `sha-xxxxxx` | Specific commit builds |
+
+Weekly builds automatically pull:
+- Latest `opencode-ai` npm package
+- Updated `node:22-bookworm` base image
+- Security patches for system packages
+
+Dependabot monitors and creates PRs for base image and GitHub Actions updates.
 
 ## License
 
