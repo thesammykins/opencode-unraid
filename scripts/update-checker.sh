@@ -1,6 +1,6 @@
 #!/bin/bash
-# OpenCode Update Checker
-# Periodically checks for opencode-ai updates and restarts service when safe
+# Shuvcode Update Checker
+# Periodically checks for shuvcode updates and restarts service when safe
 #
 # Environment variables:
 #   UPDATE_CHECK_INTERVAL - Check interval in seconds (default: 3600 = 1 hour)
@@ -18,11 +18,11 @@ log() {
 }
 
 get_current_version() {
-    npm list -g opencode-ai --depth=0 2>/dev/null | grep -oP 'opencode-ai@\K[\d.]+' || echo ""
+    npm list -g shuvcode --depth=0 2>/dev/null | grep -oP 'shuvcode@\K[\d.]+' || echo ""
 }
 
 get_latest_version() {
-    npm view opencode-ai version 2>/dev/null || echo ""
+    npm view shuvcode version 2>/dev/null || echo ""
 }
 
 check_active_sessions() {
@@ -55,7 +55,7 @@ perform_update() {
     
     log "Installing update: $current_version -> $latest_version"
     
-    if npm install -g opencode-ai@latest 2>&1; then
+    if npm install -g shuvcode@latest 2>&1; then
         log "Update installed successfully"
         return 0
     else

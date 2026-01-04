@@ -1,4 +1,4 @@
-# Contributing to OpenCode for Unraid
+# Contributing to Shuvcode for Unraid
 
 Thanks for your interest in contributing! This document outlines how to get started.
 
@@ -70,7 +70,7 @@ Before submitting a PR, verify:
 When reporting issues, include:
 
 - Unraid version
-- Container logs (`docker logs opencode`)
+- Container logs (`docker logs shuvcode`)
 - Steps to reproduce
 - Expected vs actual behavior
 

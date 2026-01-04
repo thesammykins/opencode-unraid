@@ -1,12 +1,12 @@
-# OpenCode for Unraid
-# AI-powered coding agent with web interface
-# https://github.com/anomalyco/opencode
+# Shuvcode for Unraid
+# AI-powered coding agent with web interface (enhanced fork)
+# https://github.com/Latitudes-Dev/shuvcode
 
 FROM node:22-bookworm
 
-LABEL maintainer="OpenCode Unraid"
-LABEL org.opencontainers.image.source="https://github.com/anomalyco/opencode"
-LABEL org.opencontainers.image.description="OpenCode AI coding agent for Unraid with web interface"
+LABEL maintainer="Shuvcode Unraid"
+LABEL org.opencontainers.image.source="https://github.com/Latitudes-Dev/shuvcode"
+LABEL org.opencontainers.image.description="Shuvcode AI coding agent for Unraid with web interface"
 LABEL org.opencontainers.image.licenses="MIT"
 
 # Environment defaults
@@ -18,72 +18,66 @@ ENV PUID=99 \
     XDG_CONFIG_HOME=/home/opencode/.config \
     XDG_DATA_HOME=/home/opencode/.local/share \
     XDG_STATE_HOME=/home/opencode/.local/state \
-    XDG_CACHE_HOME=/home/opencode/.cache
+    XDG_CACHE_HOME=/home/opencode/.cache \
+    UPDATE_CHECK_INTERVAL=3600
 
 # Install system dependencies and development tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Python and pip
     python3 \
     python3-pip \
     python3-venv \
-    # Build tools for native modules
     build-essential \
-    # Version control
     git \
-    # HTTP utilities
+    git-lfs \
     curl \
     wget \
     tini \
     gosu \
-    # Additional useful tools
     jq \
     ripgrep \
     fd-find \
     tree \
     vim-tiny \
     less \
-    # For file watching
     inotify-tools \
-    # Timezone support
     tzdata \
-    # CA certificates for HTTPS
     ca-certificates \
+    openssh-client \
+    gnupg \
+    unzip \
+    zip \
+    xz-utils \
+    procps \
+    htop \
     && rm -rf /var/lib/apt/lists/*
 
-# Create opencode user
-RUN useradd -u ${PUID} -g users -m -d /home/opencode -s /bin/bash opencode
+RUN useradd -u 99 -g users -m -d /home/opencode -s /bin/bash opencode
 
-# Create directory structure
 RUN mkdir -p \
     /home/opencode/.config/opencode \
     /home/opencode/.local/share/opencode \
     /home/opencode/.local/state/opencode \
     /home/opencode/.cache/opencode \
+    /home/opencode/.ssh \
     /projects && \
-    chown -R opencode:users /home/opencode /projects
+    chown -R opencode:users /home/opencode /projects && \
+    chmod 700 /home/opencode/.ssh
 
-# Install opencode-ai globally
-RUN npm install -g opencode-ai@latest && \
+RUN npm install -g shuvcode@latest && \
     npm cache clean --force
 
-# Create symlink for fd (Debian names it fd-find)
 RUN ln -s /usr/bin/fdfind /usr/local/bin/fd 2>/dev/null || true
 
-# Copy entrypoint script
 COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --chmod=755 scripts/update-checker.sh /usr/local/bin/update-checker.sh
 
-# Working directory
 WORKDIR /projects
 
-# Expose web UI port
 EXPOSE 4096
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:${PORT}/global/health || exit 1
 
-# Use tini as init system
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
 
-# Default command - run opencode in web mode
 CMD ["opencode", "web"]

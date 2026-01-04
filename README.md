@@ -1,24 +1,26 @@
-# OpenCode for Unraid
+# Shuvcode for Unraid
 
-Docker container running [OpenCode](https://github.com/anomalyco/opencode) with web interface support, designed for Unraid servers.
+Docker container running [Shuvcode](https://github.com/Latitudes-Dev/shuvcode) (enhanced OpenCode fork) with web interface support, designed for Unraid servers.
 
-OpenCode is an open-source AI coding agent that helps you write, debug, and refactor code using LLMs from a variety of providers.
+Shuvcode is an enhanced fork of OpenCode - an open-source AI coding agent that helps you write, debug, and refactor code using LLMs from a variety of providers. This fork includes additional features like mobile PWA support, enhanced UI, and community-contributed improvements.
 
 ## Features
 
-- **Web-based UI** - Access OpenCode from any browser on your network
+- **Web-based UI** - Access Shuvcode from any browser on your network
+- **Mobile PWA support** - Full-featured mobile Progressive Web App
 - **Development ready** - Includes Node.js, Python, npm, git, and build tools
 - **Persistent configuration** - Config and sessions stored in Unraid appdata
 - **Multi-provider support** - Works with Anthropic, OpenAI, Google, Azure, Groq, and local models
-- **Auto-updates** - Automatically updates OpenCode when no sessions are active
+- **Auto-updates** - Automatically updates Shuvcode when no sessions are active
 - **Custom packages** - Install additional apt, npm, or pip packages at runtime
 - **SSH support** - Mount SSH keys for git operations
+- **Enhanced features** - Custom server URLs, IDE integration, improved spinner styles, and more
 
 ## Quick Start
 
 ### Unraid Community Applications
 
-1. Search for "OpenCode" in Community Applications
+1. Search for "Shuvcode" in Community Applications
 2. Click Install
 3. Configure the paths and port
 4. Start the container
@@ -34,7 +36,7 @@ If this template isn't yet in Community Applications, add it manually:
    https://raw.githubusercontent.com/thesammykins/opencode-unraid/main/unraid/opencode.xml
    ```
 3. Save and go to **Docker** → **Add Container**
-4. Select **Template: opencode** from the dropdown
+4. Select **Template: shuvcode** from the dropdown
 5. Configure paths and click Apply
 
 ### Docker Compose
@@ -43,9 +45,9 @@ If this template isn't yet in Community Applications, add it manually:
 version: "3.8"
 
 services:
-  opencode:
+  shuvcode:
     image: ghcr.io/thesammykins/opencode-unraid:latest
-    container_name: opencode
+    container_name: shuvcode
     ports:
       - "4096:4096"
     volumes:
@@ -66,13 +68,13 @@ services:
 
 ```bash
 docker run -d \
-  --name opencode \
+  --name shuvcode \
   -p 4096:4096 \
-  -v /mnt/user/appdata/opencode/config:/home/opencode/.config/opencode \
-  -v /mnt/user/appdata/opencode/data:/home/opencode/.local/share/opencode \
-  -v /mnt/user/appdata/opencode/state:/home/opencode/.local/state/opencode \
-  -v /mnt/user/appdata/opencode/cache:/home/opencode/.cache/opencode \
-  -v /mnt/user/appdata/opencode/ssh:/home/opencode/.ssh \
+  -v /mnt/user/appdata/shuvcode/config:/home/opencode/.config/opencode \
+  -v /mnt/user/appdata/shuvcode/data:/home/opencode/.local/share/opencode \
+  -v /mnt/user/appdata/shuvcode/state:/home/opencode/.local/state/opencode \
+  -v /mnt/user/appdata/shuvcode/cache:/home/opencode/.cache/opencode \
+  -v /mnt/user/appdata/shuvcode/ssh:/home/opencode/.ssh \
   -v /mnt/user/projects:/projects \
   -e PUID=99 \
   -e PGID=100 \
@@ -130,7 +132,7 @@ Packages are installed on every container start to ensure freshness. For frequen
 
 ## Auto-Updates
 
-The container automatically checks for OpenCode updates (default: every hour). When an update is available:
+The container automatically checks for Shuvcode updates (default: every hour). When an update is available:
 
 1. Checks if any sessions are currently active via `/session/status` API
 2. If sessions are active, postpones the update
@@ -200,7 +202,7 @@ volumes:
 Or copy specific keys:
 ```yaml
 volumes:
-  - /mnt/user/appdata/opencode/ssh:/home/opencode/.ssh
+  - /mnt/user/appdata/shuvcode/ssh:/home/opencode/.ssh
 ```
 
 Ensure proper permissions (600 for private keys).
@@ -216,7 +218,7 @@ volumes:
   - /mnt/user/development:/projects
 ```
 
-Then in OpenCode, navigate to your project:
+Then in Shuvcode, navigate to your project:
 ```
 cd /projects/my-app
 ```
@@ -225,14 +227,14 @@ cd /projects/my-app
 
 Create custom agents by adding markdown files to your config:
 ```
-/mnt/user/appdata/opencode/config/agent/my-agent.md
+/mnt/user/appdata/shuvcode/config/agent/my-agent.md
 ```
 
 ### Custom Commands
 
 Create custom commands:
 ```
-/mnt/user/appdata/opencode/config/command/my-command.md
+/mnt/user/appdata/shuvcode/config/command/my-command.md
 ```
 
 ### MCP Servers
@@ -256,7 +258,7 @@ Configure MCP servers in your `opencode.json`:
 
 Check the logs:
 ```bash
-docker logs opencode
+docker logs shuvcode
 ```
 
 ### Permission issues
@@ -281,10 +283,10 @@ Check container logs for specific errors. Ensure package names are correct for t
 
 ### Can't create new projects from Web UI
 
-This is an upstream OpenCode limitation - the web interface doesn't support creating new projects. Workarounds:
+This is an upstream limitation - the web interface doesn't support creating new projects. Workarounds:
 
 1. **Pre-create projects** on your host and mount them to `/projects`
-2. **Use the terminal** inside the container: `docker exec -it opencode bash` then use `git clone` or `mkdir`
+2. **Use the terminal** inside the container: `docker exec -it shuvcode bash` then use `git clone` or `mkdir`
 3. **Create via the mounted volume** directly on your Unraid server at the path mapped to `/projects`
 
 ## Building Locally
@@ -307,7 +309,7 @@ This image uses weekly automated builds to stay current:
 | `sha-xxxxxx` | Specific commit builds |
 
 Weekly builds automatically pull:
-- Latest `opencode-ai` npm package
+- Latest `shuvcode` npm package
 - Updated `node:22-bookworm` base image
 - Security patches for system packages
 
@@ -315,10 +317,10 @@ Dependabot monitors and creates PRs for base image and GitHub Actions updates.
 
 ## License
 
-This project is licensed under the MIT License. OpenCode itself is also MIT licensed.
+This project is licensed under the MIT License. Shuvcode and OpenCode are also MIT licensed.
 
 ## Links
 
+- [Shuvcode GitHub](https://github.com/Latitudes-Dev/shuvcode)
 - [OpenCode Documentation](https://opencode.ai/docs)
-- [OpenCode GitHub](https://github.com/anomalyco/opencode)
 - [Unraid Forums](https://forums.unraid.net/)

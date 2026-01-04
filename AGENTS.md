@@ -1,10 +1,10 @@
-# OpenCode for Unraid - Agent Guidelines
+# Shuvcode for Unraid - Agent Guidelines
 
 ## Project Overview
 
-Docker container project wrapping [OpenCode](https://github.com/anomalyco/opencode) AI coding agent for Unraid servers with web UI support.
+Docker container project wrapping [Shuvcode](https://github.com/Latitudes-Dev/shuvcode) (enhanced OpenCode fork) AI coding agent for Unraid servers with web UI support.
 
-**Purpose**: Enable Unraid users to run OpenCode from any browser on their network with persistent configuration in appdata.
+**Purpose**: Enable Unraid users to run Shuvcode from any browser on their network with persistent configuration in appdata.
 
 ## Architecture
 
@@ -39,14 +39,14 @@ opencode_unraid/
 Container uses XDG spec, mapped to Unraid appdata:
 | Container Path | Unraid Path | Purpose |
 |---------------|-------------|---------|
-| `~/.config/opencode` | `/mnt/user/appdata/opencode/config` | Config files |
-| `~/.local/share/opencode` | `/mnt/user/appdata/opencode/data` | Session data |
-| `~/.local/state/opencode` | `/mnt/user/appdata/opencode/state` | State files |
-| `~/.cache/opencode` | `/mnt/user/appdata/opencode/cache` | Cache (safe to clear) |
-| `~/.ssh` | `/mnt/user/appdata/opencode/ssh` | SSH keys for git |
+| `~/.config/opencode` | `/mnt/user/appdata/shuvcode/config` | Config files |
+| `~/.local/share/opencode` | `/mnt/user/appdata/shuvcode/data` | Session data |
+| `~/.local/state/opencode` | `/mnt/user/appdata/shuvcode/state` | State files |
+| `~/.cache/opencode` | `/mnt/user/appdata/shuvcode/cache` | Cache (safe to clear) |
+| `~/.ssh` | `/mnt/user/appdata/shuvcode/ssh` | SSH keys for git |
 
 ### Web Mode
-OpenCode runs in web mode by default:
+Shuvcode runs in web mode by default:
 ```bash
 opencode web --hostname 0.0.0.0 --port ${PORT}
 ```
@@ -54,7 +54,7 @@ opencode web --hostname 0.0.0.0 --port ${PORT}
 - Binds to 0.0.0.0 (required for container networking)
 - HTTPS handled externally via reverse proxy
 
-### OpenCode API Endpoints
+### API Endpoints
 | Endpoint | Purpose |
 |----------|---------|
 | `GET /global/health` | Health check `{"healthy":true}` |
@@ -90,10 +90,10 @@ curl http://localhost:4096/global/health
 curl http://localhost:4096/session/status
 
 # View logs
-docker logs opencode
+docker logs shuvcode
 
 # Shell into container
-docker exec -it opencode bash
+docker exec -it shuvcode bash
 ```
 
 ## Environment Variables
@@ -120,36 +120,27 @@ The `unraid/opencode.xml` follows Unraid CA format:
 
 ## Known Issues / TODOs
 
-1. ~~**OWNER placeholders**: Replace with actual GitHub org before publishing~~ ✅ Resolved
-   - ~~`Dockerfile` labels~~
-   - ~~`unraid/opencode.xml` Repository/Registry/Support~~
-   - ~~`README.md` image references~~
-   - ~~`docker-compose.yml` image reference~~
-
-2. **Version pinning**: `opencode-ai@latest` is non-deterministic
+1. **Version pinning**: `shuvcode@latest` is non-deterministic
    - Consider pinning specific version for reproducible builds
 
-3. ~~**XML Date tag**: Missing `<Date>` tag in XML template~~ ✅ Resolved
-   - ~~Add before CA submission: `<Date>2026-01-04</Date>`~~
-
-4. **Upstream limitation**: Web UI cannot create new projects
+2. **Upstream limitation**: Web UI cannot create new projects
    - Users must pre-create projects on host or use `docker exec` to create inside container
-   - This is an OpenCode limitation, not container-specific
+   - This is an OpenCode/Shuvcode limitation, not container-specific
 
 ## Testing Checklist
 
 Before releasing:
-- [x] Docker build succeeds
-- [x] Container starts without errors
-- [x] Health check passes (`/global/health`)
-- [x] Update checker starts in background
-- [x] Web UI accessible from browser
-- [x] PUID/PGID correctly applied (check file ownership)
-- [x] Config persists across container restart
-- [x] OpenCode can access mounted projects
-- [x] API key configuration works via `/connect`
-- [x] EXTRA_*_PACKAGES install correctly
-- [x] Auto-update triggers when no sessions active
+- [ ] Docker build succeeds
+- [ ] Container starts without errors
+- [ ] Health check passes (`/global/health`)
+- [ ] Update checker starts in background
+- [ ] Web UI accessible from browser
+- [ ] PUID/PGID correctly applied (check file ownership)
+- [ ] Config persists across container restart
+- [ ] Shuvcode can access mounted projects
+- [ ] API key configuration works via `/connect`
+- [ ] EXTRA_*_PACKAGES install correctly
+- [ ] Auto-update triggers when no sessions active
 
 ## Contributing
 

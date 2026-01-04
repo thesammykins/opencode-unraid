@@ -21,14 +21,14 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Check for opencode-ai updates
-        id: check-opencode
+      - name: Check for shuvcode updates
+        id: check-shuvcode
         run: |
-          LATEST=$(npm view opencode-ai version 2>/dev/null || echo "0.0.0")
-          CURRENT=$(grep -oP 'opencode-ai@\K[^"]+' Dockerfile 2>/dev/null | head -1 || echo "latest")
+          LATEST=$(npm view shuvcode version 2>/dev/null || echo "0.0.0")
+          CURRENT=$(grep -oP 'shuvcode@\K[^"]+' Dockerfile 2>/dev/null | head -1 || echo "latest")
           echo "latest=$LATEST" >> $GITHUB_OUTPUT
           echo "current=$CURRENT" >> $GITHUB_OUTPUT
-          echo "Latest opencode-ai: $LATEST"
+          echo "Latest shuvcode: $LATEST"
           echo "Current in Dockerfile: $CURRENT"
 
       - name: Check base image updates
@@ -51,7 +51,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Package | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| opencode-ai | ${{ steps.check-opencode.outputs.latest }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| shuvcode | ${{ steps.check-shuvcode.outputs.latest }} |" >> $GITHUB_STEP_SUMMARY
           echo "| node:22-bookworm | Base image checked |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Weekly builds automatically incorporate the latest versions." >> $GITHUB_STEP_SUMMARY

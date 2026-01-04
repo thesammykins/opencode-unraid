@@ -11,7 +11,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # Run weekly on Sunday at 00:00 UTC to pick up latest opencode-ai and base image updates
+    # Run weekly on Sunday at 00:00 UTC to pick up latest shuvcode and base image updates
     - cron: '0 0 * * 0'
   workflow_dispatch:
     inputs:
@@ -38,12 +38,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Get latest opencode-ai version
-        id: opencode-version
+      - name: Get latest shuvcode version
+        id: shuvcode-version
         run: |
-          OPENCODE_VERSION=$(npm view opencode-ai version 2>/dev/null || echo "unknown")
-          echo "version=$OPENCODE_VERSION" >> $GITHUB_OUTPUT
-          echo "Latest opencode-ai version: $OPENCODE_VERSION"
+          SHUVCODE_VERSION=$(npm view shuvcode version 2>/dev/null || echo "unknown")
+          echo "version=$SHUVCODE_VERSION" >> $GITHUB_OUTPUT
+          echo "Latest shuvcode version: $SHUVCODE_VERSION"
 
       - name: Set up QEMU for multi-arch builds
         uses: docker/setup-qemu-action@v3
@@ -76,10 +76,10 @@ jobs:
             # PR number
             type=ref,event=pr
           labels: |
-            org.opencontainers.image.title=OpenCode for Unraid
+            org.opencontainers.image.title=Shuvcode for Unraid
             org.opencontainers.image.description=AI-powered coding agent with web interface for Unraid servers
             org.opencontainers.image.vendor=thesammykins
-            io.opencode.version=${{ steps.opencode-version.outputs.version }}
+            io.shuvcode.version=${{ steps.shuvcode-version.outputs.version }}
 
       - name: Build and push Docker image
         id: push
@@ -108,7 +108,7 @@ jobs:
         run: |
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **OpenCode Version**: ${{ steps.opencode-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Shuvcode Version**: ${{ steps.shuvcode-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "- **Tags**:" >> $GITHUB_STEP_SUMMARY

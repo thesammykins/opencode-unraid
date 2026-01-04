@@ -1,12 +1,12 @@
 version: "3.8"
 
 services:
-  opencode:
+  shuvcode:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: opencode
-    hostname: opencode
+    container_name: shuvcode
+    hostname: shuvcode
     ports:
       - "4096:4096"
     volumes:
@@ -14,10 +14,12 @@ services:
       - ./appdata/data:/home/opencode/.local/share/opencode
       - ./appdata/state:/home/opencode/.local/state/opencode
       - ./appdata/cache:/home/opencode/.cache/opencode
+      - ./appdata/ssh:/home/opencode/.ssh
       - ./projects:/projects
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
       - PORT=4096
+      - UPDATE_CHECK_INTERVAL=3600
     restart: unless-stopped

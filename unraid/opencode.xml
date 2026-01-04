@@ -1,32 +1,38 @@
 <?xml version="1.0"?>
 <Container version="2">
-  <Name>opencode</Name>
-  <Repository>ghcr.io/OWNER/opencode-unraid:latest</Repository>
-  <Registry>https://github.com/OWNER/opencode-unraid/pkgs/container/opencode-unraid</Registry>
+  <Name>shuvcode</Name>
+  <Repository>ghcr.io/thesammykins/opencode-unraid:latest</Repository>
+  <Registry>https://github.com/thesammykins/opencode-unraid/pkgs/container/opencode-unraid</Registry>
   <Network>bridge</Network>
   <Privileged>false</Privileged>
   <Shell>bash</Shell>
   
-  <Support>https://github.com/OWNER/opencode-unraid/issues</Support>
-  <Project>https://github.com/anomalyco/opencode</Project>
+  <Support>https://github.com/thesammykins/opencode-unraid/issues</Support>
+  <Project>https://github.com/Latitudes-Dev/shuvcode</Project>
   <Overview>
-OpenCode is an open-source AI coding agent that provides a web-based interface for AI-assisted development.
+Shuvcode is an enhanced fork of OpenCode - an open-source AI coding agent that provides a web-based interface for AI-assisted development.
 
-This container runs OpenCode in web mode, allowing you to access the AI coding agent from any browser on your network. It includes development tools like Node.js, Python, npm, and git for complete coding workflows.
+This container runs Shuvcode in web mode, allowing you to access the AI coding agent from any browser on your network. It includes development tools like Node.js, Python, npm, and git for complete coding workflows.
 
 Key Features:
 - Web-based terminal UI accessible from any device
+- Mobile PWA support with responsive design
 - Multi-provider support (Anthropic, OpenAI, Google, Azure, local models)
 - Built-in development environment with Node.js, Python, git
 - Persistent configuration and session history
 - Project file access for AI-assisted coding
+- Auto-update with session-aware restart
+- Install custom packages at runtime via environment variables
+- Custom server URL settings for self-hosted deployments
+- Enhanced features from upstream PRs
 
 After installation, open the WebUI and use /connect to configure your LLM provider API key.
   </Overview>
   <Category>Productivity: Tools:</Category>
   <WebUI>http://[IP]:[PORT:4096]</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/OWNER/opencode-unraid/main/unraid/opencode.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/anomalyco/opencode/dev/packages/console/app/src/asset/logo-ornate-light.svg</Icon>
+  <TemplateURL>https://raw.githubusercontent.com/thesammykins/opencode-unraid/main/unraid/opencode.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/Latitudes-Dev/shuvcode/integration/packages/console/app/src/asset/logo-ornate-light.svg</Icon>
+  <Date>2026-01-04</Date>
   
   <ExtraParams>--restart unless-stopped</ExtraParams>
 
@@ -35,7 +41,7 @@ After installation, open the WebUI and use /connect to configure your LLM provid
     Target="4096" 
     Default="4096" 
     Mode="tcp" 
-    Description="OpenCode web interface port" 
+    Description="Shuvcode web interface port" 
     Type="Port" 
     Display="always" 
     Required="true" 
@@ -44,9 +50,9 @@ After installation, open the WebUI and use /connect to configure your LLM provid
   <Config 
     Name="Config" 
     Target="/home/opencode/.config/opencode" 
-    Default="/mnt/user/appdata/opencode/config" 
+    Default="/mnt/user/appdata/shuvcode/config" 
     Mode="rw" 
-    Description="OpenCode configuration files (opencode.json, auth.json, agents, commands)" 
+    Description="Shuvcode configuration files (opencode.json, auth.json, agents, commands)" 
     Type="Path" 
     Display="always" 
     Required="true" 
@@ -55,9 +61,9 @@ After installation, open the WebUI and use /connect to configure your LLM provid
   <Config 
     Name="Data" 
     Target="/home/opencode/.local/share/opencode" 
-    Default="/mnt/user/appdata/opencode/data" 
+    Default="/mnt/user/appdata/shuvcode/data" 
     Mode="rw" 
-    Description="OpenCode data files (session history, logs)" 
+    Description="Shuvcode data files (session history, logs)" 
     Type="Path" 
     Display="always" 
     Required="true" 
@@ -66,9 +72,9 @@ After installation, open the WebUI and use /connect to configure your LLM provid
   <Config 
     Name="State" 
     Target="/home/opencode/.local/state/opencode" 
-    Default="/mnt/user/appdata/opencode/state" 
+    Default="/mnt/user/appdata/shuvcode/state" 
     Mode="rw" 
-    Description="OpenCode state files" 
+    Description="Shuvcode state files" 
     Type="Path" 
     Display="advanced" 
     Required="false" 
@@ -77,9 +83,20 @@ After installation, open the WebUI and use /connect to configure your LLM provid
   <Config 
     Name="Cache" 
     Target="/home/opencode/.cache/opencode" 
-    Default="/mnt/user/appdata/opencode/cache" 
+    Default="/mnt/user/appdata/shuvcode/cache" 
     Mode="rw" 
-    Description="OpenCode cache files (can be cleared safely)" 
+    Description="Shuvcode cache files (can be cleared safely)" 
+    Type="Path" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="SSH Keys" 
+    Target="/home/opencode/.ssh" 
+    Default="/mnt/user/appdata/shuvcode/ssh" 
+    Mode="rw" 
+    Description="SSH keys for git operations (optional)" 
     Type="Path" 
     Display="advanced" 
     Required="false" 
@@ -134,7 +151,51 @@ After installation, open the WebUI and use /connect to configure your LLM provid
     Target="PORT" 
     Default="4096" 
     Mode="" 
-    Description="Internal port for OpenCode web server (should match WebUI Port)" 
+    Description="Internal port for Shuvcode web server (should match WebUI Port)" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Extra APT Packages" 
+    Target="EXTRA_APT_PACKAGES" 
+    Default="" 
+    Mode="" 
+    Description="Space-separated list of additional apt packages to install (e.g., golang ruby lua5.4)" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Extra NPM Packages" 
+    Target="EXTRA_NPM_PACKAGES" 
+    Default="" 
+    Mode="" 
+    Description="Space-separated list of additional npm packages to install globally (e.g., typescript tsx pnpm)" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Extra PIP Packages" 
+    Target="EXTRA_PIP_PACKAGES" 
+    Default="" 
+    Mode="" 
+    Description="Space-separated list of additional pip packages to install (e.g., black ruff mypy)" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="false"/>
+
+  <Config 
+    Name="Update Check Interval" 
+    Target="UPDATE_CHECK_INTERVAL" 
+    Default="3600" 
+    Mode="" 
+    Description="How often to check for Shuvcode updates in seconds (3600 = 1 hour)" 
     Type="Variable" 
     Display="advanced" 
     Required="false" 
@@ -163,11 +224,22 @@ After installation, open the WebUI and use /connect to configure your LLM provid
     Mask="true"/>
 
   <Config 
+    Name="Google API Key" 
+    Target="GOOGLE_API_KEY" 
+    Default="" 
+    Mode="" 
+    Description="API key for Google Gemini (optional - can also configure via /connect command)" 
+    Type="Variable" 
+    Display="advanced" 
+    Required="false" 
+    Mask="true"/>
+
+  <Config 
     Name="Disable Auto-Update" 
     Target="OPENCODE_DISABLE_AUTOUPDATE" 
     Default="false|true" 
     Mode="" 
-    Description="Disable automatic OpenCode updates" 
+    Description="Disable automatic Shuvcode updates (updates only apply when no active sessions)" 
     Type="Variable" 
     Display="advanced" 
     Required="false" 
