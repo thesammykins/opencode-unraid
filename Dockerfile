@@ -2,7 +2,7 @@
 # AI-powered coding agent with web interface
 # https://github.com/anomalyco/opencode
 
-FROM node:22-bookworm
+FROM node:25-bookworm
 
 LABEL maintainer="OpenCode Unraid"
 LABEL org.opencontainers.image.source="https://github.com/anomalyco/opencode"
