@@ -1,19 +1,21 @@
-# Shuvcode for Unraid - Technical Specification
+# OpenCode for Unraid - Technical Specification
 
 ## Overview
 
-This project creates a Docker container running [Shuvcode](https://github.com/Latitudes-Dev/shuvcode) (enhanced OpenCode fork) with web UI support, packaged for easy deployment on Unraid servers via a Community Applications XML template.
+This project creates a Docker container running [OpenCode](https://github.com/sst/opencode) (or [Shuvcode](https://github.com/Latitudes-Dev/shuvcode) fork) with headless API server and optional web UI support, packaged for easy deployment on Unraid servers via a Community Applications XML template.
 
-Shuvcode is an enhanced fork of OpenCode - an open-source AI coding agent that provides a terminal-based interface, desktop app, or web interface for AI-assisted development. This container specifically runs Shuvcode in **web mode** (`opencode web`), allowing users to access the AI coding agent from any browser on their network.
+OpenCode is an open-source AI coding agent that provides a terminal-based interface, desktop app, or web interface for AI-assisted development. This container runs in **headless serve mode** by default (`opencode serve`), allowing remote clients to connect. Optionally, a **web UI** can be enabled on a separate port.
 
 ## Goals
 
-1. **Web Access**: Run Shuvcode in web mode so users can access it from any device on their Unraid server's network
-2. **Persistent Configuration**: Store Shuvcode config in Unraid's standard appdata location
-3. **Development Ready**: Include common development tools (Node.js, Python, npm, git) for AI-assisted coding workflows
-4. **Unraid Integration**: Provide a proper Community Applications XML template for easy installation
-5. **Extensible**: Allow users to install additional packages at runtime
-6. **Self-Updating**: Automatically update Shuvcode when safe (no active sessions)
+1. **Headless Server**: Run OpenCode in serve mode for remote client connections
+2. **Optional Web UI**: Enable built-in web interface on separate port when needed
+3. **CLI Flexibility**: Support both mainline OpenCode and Shuvcode fork
+4. **Persistent Configuration**: Store config in Unraid's standard appdata location
+5. **Development Ready**: Include common development tools (Node.js, Python, npm, git)
+6. **Unraid Integration**: Provide a proper Community Applications XML template
+7. **Extensible**: Allow users to install additional packages at runtime
+8. **Self-Updating**: Automatically update when safe (no active sessions)
 
 ## Architecture
 
@@ -22,16 +24,16 @@ Shuvcode is an enhanced fork of OpenCode - an open-source AI coding agent that p
 ```
 /
 ├── home/opencode/
-│   ├── .config/opencode/       # Mounted: /mnt/user/appdata/shuvcode/config
-│   │   ├── opencode.json       # Shuvcode configuration
+│   ├── .config/opencode/       # Mounted: /mnt/user/appdata/opencode/config
+│   │   ├── opencode.json       # Configuration
 │   │   ├── auth.json           # Provider API keys (created by opencode auth)
 │   │   ├── agent/              # Custom agent definitions
 │   │   ├── command/            # Custom commands
 │   │   └── plugin/             # Custom plugins
-│   ├── .local/share/opencode/  # Mounted: /mnt/user/appdata/shuvcode/data
-│   ├── .local/state/opencode/  # Mounted: /mnt/user/appdata/shuvcode/state
-│   ├── .cache/opencode/        # Mounted: /mnt/user/appdata/shuvcode/cache
-│   └── .ssh/                   # Mounted: /mnt/user/appdata/shuvcode/ssh
+│   ├── .local/share/opencode/  # Mounted: /mnt/user/appdata/opencode/data
+│   ├── .local/state/opencode/  # Mounted: /mnt/user/appdata/opencode/state
+│   ├── .cache/opencode/        # Mounted: /mnt/user/appdata/opencode/cache
+│   └── .ssh/                   # Mounted: /mnt/user/appdata/opencode/ssh
 ├── projects/                   # Mounted: User's project directory
 └── usr/local/bin/
     ├── entrypoint.sh           # Container entrypoint
@@ -40,7 +42,8 @@ Shuvcode is an enhanced fork of OpenCode - an open-source AI coding agent that p
 
 ### Network
 
-- **Default Port**: 4096 (Shuvcode's default web server port)
+- **API Port (default)**: 4096 - Headless API server for remote clients
+- **Web Port (optional)**: 4097 - Web UI when ENABLE_WEB_UI=true
 - **Hostname**: `0.0.0.0` (listen on all interfaces for network access)
 - **Protocol**: HTTP (HTTPS should be handled by reverse proxy if needed)
 
@@ -49,45 +52,45 @@ Shuvcode is an enhanced fork of OpenCode - an open-source AI coding agent that p
 ### Base Image
 
 Use `node:22-bookworm` as the base image:
-- Provides Node.js 22 LTS (required for npm-based shuvcode installation)
+- Provides Node.js 22 LTS (required for npm-based installation)
 - Debian Bookworm provides stable package ecosystem
 - Good balance of size and functionality
 - NOT alpine - dev tools need glibc, native modules fail on musl
 
-### Shuvcode Installation
+### CLI Installation
 
-Install via npm globally:
+Install both CLIs via npm globally:
 ```bash
-npm install -g shuvcode@latest
+npm install -g opencode-ai@latest shuvcode@latest
 ```
 
-This provides the `shuvcode` CLI binary with all subcommands including `shuvcode web`.
+This provides both `opencode` and `shuvcode` CLI binaries, selectable via `OPENCODE_CLI` env var.
 
-### Web Mode Operation
+### Dual Mode Operation
 
-Shuvcode web mode (`shuvcode web`) starts:
-1. A headless HTTP server (default port 4096)
-2. Serves a web-based terminal UI
-3. Provides full Shuvcode functionality through the browser
-4. Exposes REST API at `/doc` (OpenAPI 3.1 spec)
-5. Real-time updates via SSE at `/event`
-
-Command structure:
+**Primary (always running)**: Headless API server
 ```bash
-shuvcode web --hostname 0.0.0.0 --port 4096
+${OPENCODE_CLI} serve --hostname 0.0.0.0 --port ${PORT}
 ```
+
+**Secondary (optional)**: Web UI on separate port
+```bash
+${OPENCODE_CLI} web --hostname 0.0.0.0 --port ${WEB_PORT}
+```
+
+The web UI is enabled when `ENABLE_WEB_UI=true`. Both modes can run simultaneously on different ports.
 
 ### Configuration Directories
 
-Shuvcode follows XDG Base Directory specification:
+OpenCode follows XDG Base Directory specification:
 
 | Purpose | Container Path | Mounted From |
 |---------|---------------|--------------|
-| Config | `/home/opencode/.config/opencode/` | `/mnt/user/appdata/shuvcode/config/` |
-| Data | `/home/opencode/.local/share/opencode/` | `/mnt/user/appdata/shuvcode/data/` |
-| State | `/home/opencode/.local/state/opencode/` | `/mnt/user/appdata/shuvcode/state/` |
-| Cache | `/home/opencode/.cache/opencode/` | `/mnt/user/appdata/shuvcode/cache/` |
-| SSH | `/home/opencode/.ssh/` | `/mnt/user/appdata/shuvcode/ssh/` |
+| Config | `/home/opencode/.config/opencode/` | `/mnt/user/appdata/opencode/config/` |
+| Data | `/home/opencode/.local/share/opencode/` | `/mnt/user/appdata/opencode/data/` |
+| State | `/home/opencode/.local/state/opencode/` | `/mnt/user/appdata/opencode/state/` |
+| Cache | `/home/opencode/.cache/opencode/` | `/mnt/user/appdata/opencode/cache/` |
+| SSH | `/home/opencode/.ssh/` | `/mnt/user/appdata/opencode/ssh/` |
 
 ### Development Tools
 
@@ -116,26 +119,24 @@ The container includes these development tools for AI-assisted coding workflows:
 | `PUID` | 99 | User ID for file permissions (Unraid nobody) |
 | `PGID` | 100 | Group ID for file permissions (Unraid users) |
 | `TZ` | `Etc/UTC` | Container timezone |
-| `PORT` | 4096 | Web server port |
+| `PORT` | 4096 | Headless API server port |
+| `WEB_PORT` | 4097 | Web UI port (when enabled) |
+| `ENABLE_WEB_UI` | false | Enable web UI on WEB_PORT |
+| `OPENCODE_CLI` | shuvcode | CLI to use: `opencode` or `shuvcode` |
 | `EXTRA_APT_PACKAGES` | (empty) | Space-separated apt packages to install |
 | `EXTRA_NPM_PACKAGES` | (empty) | Space-separated npm global packages to install |
 | `EXTRA_PIP_PACKAGES` | (empty) | Space-separated pip packages to install |
 | `UPDATE_CHECK_INTERVAL` | 3600 | Seconds between update checks (1 hour) |
 | `OPENCODE_DISABLE_AUTOUPDATE` | (empty) | Disable auto-updates if set to `true` |
-| `OPENCODE_DISABLE_LSP_DOWNLOAD` | (empty) | Disable LSP auto-download if set to `true` |
+| `SHUVCODE_DESKTOP_URL` | `https://app.opencode.ai` | Desktop UI URL for web mode |
 
 ### Custom Package Installation
 
 The entrypoint script supports installing additional packages at runtime:
 
 ```bash
-# APT packages (system-level)
 EXTRA_APT_PACKAGES="golang ruby lua5.4"
-
-# NPM packages (installed globally)
 EXTRA_NPM_PACKAGES="typescript tsx pnpm"
-
-# PIP packages (installed system-wide)
 EXTRA_PIP_PACKAGES="black ruff mypy"
 ```
 
@@ -145,7 +146,7 @@ Packages are installed on every container start. For performance, consider build
 
 The container includes a background update checker (`update-checker.sh`) that:
 
-1. Periodically checks for new versions via `npm view shuvcode version`
+1. Periodically checks for new versions via `npm view ${OPENCODE_CLI} version`
 2. Compares against installed version
 3. Checks for active sessions via `GET /session/status` API
 4. If no active sessions, installs update and sends SIGTERM for graceful restart
@@ -157,7 +158,7 @@ The update checker respects:
 
 ### Session Detection API
 
-Shuvcode exposes session management endpoints:
+OpenCode exposes session management endpoints:
 
 | Endpoint | Purpose |
 |----------|---------|
@@ -171,9 +172,10 @@ The update checker uses `/session/status` to determine if users are actively con
 ### Provider Configuration
 
 Users must configure LLM providers via one of:
-1. **Web UI**: Use `/connect` command in Shuvcode web interface
-2. **Environment variables**: Set provider API keys (e.g., `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`)
-3. **Config file**: Edit `/mnt/user/appdata/shuvcode/config/opencode.json`
+1. **Desktop App/CLI**: Connect to server and use `/connect` command
+2. **Web UI**: Use `/connect` command in browser
+3. **Environment variables**: Set provider API keys (e.g., `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`)
+4. **Config file**: Edit `/mnt/user/appdata/opencode/config/opencode.json`
 
 Supported providers include:
 - Anthropic (Claude)
@@ -190,6 +192,7 @@ Supported providers include:
 opencode_unraid/
 ├── SPEC.md                    # This specification
 ├── README.md                  # User documentation
+├── AGENTS.md                  # Agent development guidelines
 ├── Dockerfile                 # Container build instructions
 ├── docker-compose.yml         # Local development/testing
 ├── entrypoint.sh              # Container startup script
@@ -204,7 +207,7 @@ opencode_unraid/
 ### Required Fields
 
 ```xml
-<Name>shuvcode</Name>
+<Name>opencode</Name>
 <Repository>ghcr.io/thesammykins/opencode-unraid:latest</Repository>
 <Network>bridge</Network>
 ```
@@ -213,47 +216,45 @@ opencode_unraid/
 
 ```xml
 <Config 
-  Name="WebUI Port" 
+  Name="API Server Port" 
   Target="4096" 
   Default="4096" 
   Mode="tcp" 
-  Description="Shuvcode web interface port" 
+  Description="Headless API server port" 
   Type="Port" 
   Display="always" 
   Required="true"/>
+
+<Config 
+  Name="Web UI Port" 
+  Target="4097" 
+  Default="4097" 
+  Mode="tcp" 
+  Description="Optional web UI port" 
+  Type="Port" 
+  Display="always" 
+  Required="false"/>
 ```
 
 ### Volume Mappings
 
 | Name | Container Path | Default Host Path | Mode |
 |------|---------------|-------------------|------|
-| Config | `/home/opencode/.config/opencode` | `/mnt/user/appdata/shuvcode/config` | rw |
-| Data | `/home/opencode/.local/share/opencode` | `/mnt/user/appdata/shuvcode/data` | rw |
-| State | `/home/opencode/.local/state/opencode` | `/mnt/user/appdata/shuvcode/state` | rw |
-| Cache | `/home/opencode/.cache/opencode` | `/mnt/user/appdata/shuvcode/cache` | rw |
-| SSH | `/home/opencode/.ssh` | `/mnt/user/appdata/shuvcode/ssh` | rw |
+| Config | `/home/opencode/.config/opencode` | `/mnt/user/appdata/opencode/config` | rw |
+| Data | `/home/opencode/.local/share/opencode` | `/mnt/user/appdata/opencode/data` | rw |
+| State | `/home/opencode/.local/state/opencode` | `/mnt/user/appdata/opencode/state` | rw |
+| Cache | `/home/opencode/.cache/opencode` | `/mnt/user/appdata/opencode/cache` | rw |
+| SSH | `/home/opencode/.ssh` | `/mnt/user/appdata/opencode/ssh` | rw |
 | Projects | `/projects` | `/mnt/user/projects` | rw |
 
-### Environment Variables in Template
-
-| Name | Variable | Default | Display | Required |
-|------|----------|---------|---------|----------|
-| PUID | `PUID` | 99 | advanced | false |
-| PGID | `PGID` | 100 | advanced | false |
-| Timezone | `TZ` | `Etc/UTC` | always | false |
-| Port | `PORT` | 4096 | advanced | false |
-| Extra APT | `EXTRA_APT_PACKAGES` | (empty) | advanced | false |
-| Extra NPM | `EXTRA_NPM_PACKAGES` | (empty) | advanced | false |
-| Extra PIP | `EXTRA_PIP_PACKAGES` | (empty) | advanced | false |
-| Update Interval | `UPDATE_CHECK_INTERVAL` | 3600 | advanced | false |
-
-## Implementation Steps
+## Implementation Status
 
 ### Phase 1: Core Container
 1. ✅ Create Dockerfile with base image and dependencies
-2. ✅ Install shuvcode via npm
-3. ✅ Create entrypoint script for web mode startup
+2. ✅ Install opencode and shuvcode via npm
+3. ✅ Create entrypoint script with dual-mode support
 4. ✅ Handle user permissions (PUID/PGID)
+5. ✅ Implement CLI selection (OPENCODE_CLI)
 
 ### Phase 2: Development Environment
 1. ✅ Add Python and pip
@@ -272,17 +273,19 @@ opencode_unraid/
 ### Phase 4: Unraid Integration
 1. ✅ Create XML template with proper structure
 2. ✅ Configure volume mappings for persistence
-3. ✅ Set up port mappings
+3. ✅ Set up dual port mappings
 4. ✅ Add WebUI URL pattern
-5. ✅ Add all environment variables
+5. ✅ Add all environment variables including CLI selection
 
 ### Phase 5: Testing
-1. Build container locally
-2. Test web mode access
-3. Test persistence across restarts
-4. Test custom package installation
-5. Test auto-update with session detection
-6. Test on actual Unraid system
+1. ✅ Build container locally
+2. ✅ Test serve mode access
+3. ✅ Test dual-mode (serve + web)
+4. ✅ Test CLI switching (opencode vs shuvcode)
+5. Test persistence across restarts
+6. Test custom package installation
+7. Test auto-update with session detection
+8. Test on actual Unraid system
 
 ## Security Considerations
 
