@@ -132,6 +132,10 @@ The `unraid/opencode.xml` follows Unraid CA format:
 3. ~~**XML Date tag**: Missing `<Date>` tag in XML template~~ ✅ Resolved
    - ~~Add before CA submission: `<Date>2026-01-04</Date>`~~
 
+4. **Upstream limitation**: Web UI cannot create new projects
+   - Users must pre-create projects on host or use `docker exec` to create inside container
+   - This is an OpenCode limitation, not container-specific
+
 ## Testing Checklist
 
 Before releasing:

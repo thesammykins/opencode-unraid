@@ -2,7 +2,7 @@
 
 Docker container running [OpenCode](https://github.com/anomalyco/opencode) with web interface support, designed for Unraid servers.
 
-OpenCode is an open-source AI coding agent that helps you write, debug, and refactor code using LLMs like Claude, GPT-4, and Gemini.
+OpenCode is an open-source AI coding agent that helps you write, debug, and refactor code using LLMs from a variety of providers.
 
 ## Features
 
@@ -278,6 +278,14 @@ Ensure PUID/PGID match your Unraid user (default: 99/100 for nobody/users).
 ### Package installation fails
 
 Check container logs for specific errors. Ensure package names are correct for the respective package manager.
+
+### Can't create new projects from Web UI
+
+This is an upstream OpenCode limitation - the web interface doesn't support creating new projects. Workarounds:
+
+1. **Pre-create projects** on your host and mount them to `/projects`
+2. **Use the terminal** inside the container: `docker exec -it opencode bash` then use `git clone` or `mkdir`
+3. **Create via the mounted volume** directly on your Unraid server at the path mapped to `/projects`
 
 ## Building Locally
 
