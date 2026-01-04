@@ -4,6 +4,30 @@ Docker container running [Shuvcode](https://github.com/Latitudes-Dev/shuvcode) (
 
 Shuvcode is an enhanced fork of OpenCode - an open-source AI coding agent that helps you write, debug, and refactor code using LLMs from a variety of providers. This fork includes additional features like mobile PWA support, enhanced UI, and community-contributed improvements.
 
+## Why Shuvcode over OpenCode?
+
+This container uses **Shuvcode** instead of mainline OpenCode for several reasons:
+
+| Feature | OpenCode | Shuvcode |
+|---------|----------|----------|
+| **Mobile PWA** | Limited | Full responsive PWA with dynamic island support |
+| **Remote access** | Basic web mode | Custom server URL settings, optimized for self-hosted |
+| **IDE integration** | Basic | Enhanced Cursor/VSCode integration with live selection |
+| **Community PRs** | Slow merge cycle | Faster integration of community contributions |
+| **UI enhancements** | Standard | 60+ spinner styles, theme customization, draggable sidebar |
+| **Project management** | Basic | Add existing projects dialog, git clone support |
+
+**Key enhancements in Shuvcode:**
+- **Mobile-first design** - Install as PWA on iOS/Android with proper notch handling
+- **Session search** - Ctrl+/ to search through session messages
+- **ANSI terminal output** - Full color support in bash output
+- **Live token tracking** - Real-time token usage during streaming
+- **Subagent navigation** - Clickable subagent sidebar with parent navigation
+- **Custom server URLs** - Configure API endpoints for self-hosted deployments
+- **Granular permissions** - Glob pattern support for restricting agent file access
+
+Shuvcode serves as an integration testing ground for upstream PRs, meaning you get community improvements faster while maintaining compatibility with OpenCode's configuration format.
+
 ## Features
 
 - **Web-based UI** - Access Shuvcode from any browser on your network
@@ -294,9 +318,11 @@ This is an upstream limitation - the web interface doesn't support creating new 
 ```bash
 git clone https://github.com/thesammykins/opencode-unraid.git
 cd opencode-unraid
-docker build -t opencode-unraid .
+docker build -t shuvcode-unraid .
 docker-compose up -d
 ```
+
+> **Note**: The repository is named `opencode-unraid` for historical reasons but runs Shuvcode.
 
 ## Image Versioning
 
