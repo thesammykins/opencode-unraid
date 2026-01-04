@@ -48,7 +48,7 @@ Container uses XDG spec, mapped to Unraid appdata:
 ### Web Mode
 Shuvcode runs in web mode by default:
 ```bash
-opencode web --hostname 0.0.0.0 --port ${PORT}
+shuvcode web --hostname 0.0.0.0 --port ${PORT}
 ```
 - Port 4096 default
 - Binds to 0.0.0.0 (required for container networking)

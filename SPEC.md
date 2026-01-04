@@ -61,11 +61,11 @@ Install via npm globally:
 npm install -g shuvcode@latest
 ```
 
-This provides the `opencode` CLI binary with all subcommands including `opencode web`.
+This provides the `shuvcode` CLI binary with all subcommands including `shuvcode web`.
 
 ### Web Mode Operation
 
-Shuvcode web mode (`opencode web`) starts:
+Shuvcode web mode (`shuvcode web`) starts:
 1. A headless HTTP server (default port 4096)
 2. Serves a web-based terminal UI
 3. Provides full Shuvcode functionality through the browser
@@ -74,7 +74,7 @@ Shuvcode web mode (`opencode web`) starts:
 
 Command structure:
 ```bash
-opencode web --hostname 0.0.0.0 --port 4096
+shuvcode web --hostname 0.0.0.0 --port 4096
 ```
 
 ### Configuration Directories
